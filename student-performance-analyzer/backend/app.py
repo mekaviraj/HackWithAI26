@@ -2,10 +2,19 @@ from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 import pandas as pd
 import os
+import logging
+
+# Import modules
 from analyzer import PerformanceAnalyzer
 from planner import SevenDayPlanner
 from recommendations import StudyMaterialRecommender
+from genai import generate_study_guidance
 
+# Setup logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+# Create Flask app
 app = Flask(__name__, template_folder='../frontend', static_folder='../frontend/static')
 CORS(app)
 
@@ -16,6 +25,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+logger.info("Flask app initialized successfully")
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -34,56 +44,105 @@ def dashboard():
 def upload_file():
     """Handle CSV file upload and analysis"""
     try:
+        logger.info("=== Upload request received ===")
+        
         if 'file' not in request.files:
+            logger.error("No file in request")
             return jsonify({'error': 'No file provided'}), 400
         
         file = request.files['file']
         
         if file.filename == '':
+            logger.error("Empty filename")
             return jsonify({'error': 'No file selected'}), 400
         
         if not allowed_file(file.filename):
+            logger.error(f"Invalid file type: {file.filename}")
             return jsonify({'error': 'Only CSV files are allowed'}), 400
+        
+        logger.info(f"Processing file: {file.filename}")
         
         # Read CSV
         df = pd.read_csv(file)
         
         # Validate data
         if df.empty:
+            logger.error("CSV file is empty")
             return jsonify({'error': 'CSV file is empty'}), 400
         
+        logger.info(f"CSV loaded with {len(df)} rows")
+        
         # Perform analysis
+        logger.info("Starting performance analysis...")
         analyzer = PerformanceAnalyzer(df)
         analysis = analyzer.analyze()
+        logger.info("Analysis complete")
         
         ranked_subtopics = analysis['subtopic_ranking']
         topics = analysis['topics']
+        logger.info(f"Ranked subtopics: {[s['subtopic'] for s in ranked_subtopics]}")
 
         # Generate 7-day plan
+        logger.info("Generating 7-day study plan...")
         planner = SevenDayPlanner(ranked_subtopics)
         plan = planner.generate_plan()
+        logger.info("Study plan generated")
         
         # Get recommendations
+        logger.info("Getting study material recommendations...")
         recommender = StudyMaterialRecommender()
         recommendations = recommender.recommend_materials(ranked_subtopics, topics)
+        logger.info(f"Recommendations retrieved: {list(recommendations.keys())}")
+        
         study_tips = {}
         for item in ranked_subtopics[:5]:
             topic = item.get('topic', '')
             subtopic = item.get('subtopic', 'Subtopic')
             study_tips[subtopic] = recommender.get_study_tips(topic)
+        logger.info("Study tips generated")
+
+        # Optional GenAI override
+        logger.info("=== Attempting GenAI call ===")
+        genai_payload = generate_study_guidance(analysis, recommendations)
         
-        return jsonify({
+        if genai_payload:
+            logger.info("✓ GenAI override applied for plan, recommendations, and tips.")
+            print("[SUCCESS] GenAI override applied!")
+            plan = genai_payload.get('plan', plan)
+            recommendations = genai_payload.get('recommendations', recommendations)
+            study_tips = genai_payload.get('study_tips', study_tips)
+            genai_status = {
+                "used": True, 
+                "message": "✓ GenAI applied to plan, materials, and tips."
+            }
+        else:
+            logger.warning("GenAI call failed or returned None; falling back to rule-based outputs.")
+            print("[WARNING] GenAI not used; falling back to rule-based outputs.")
+            genai_status = {
+                "used": False, 
+                "message": "⚠ GenAI unavailable. Using rule-based outputs."
+            }
+        
+        response_data = {
             'success': True,
             'analysis': analysis,
             'plan': plan,
             'recommendations': recommendations,
-            'study_tips': study_tips
-        })
+            'study_tips': study_tips,
+            'genai_status': genai_status
+        }
+        
+        logger.info("=== Response ready to send ===")
+        return jsonify(response_data)
     
     except pd.errors.ParserError as e:
-        return jsonify({'error': f'CSV parsing error: {str(e)}'}), 400
+        error_msg = f'CSV parsing error: {str(e)}'
+        logger.error(error_msg)
+        return jsonify({'error': error_msg}), 400
     except Exception as e:
-        return jsonify({'error': f'Error processing file: {str(e)}'}), 500
+        error_msg = f'Error processing file: {str(e)}'
+        logger.error(error_msg, exc_info=True)
+        return jsonify({'error': error_msg}), 500
 
 @app.route('/api/sample', methods=['GET'])
 def get_sample_data():
@@ -144,6 +203,10 @@ def get_sample_data():
         },
         'study_tips': {
             "Newton's Laws of Motion": ['Draw diagrams for each problem', 'Link concepts to real-world examples', 'Use simulation software to visualize concepts']
+        },
+        'genai_status': {
+            'used': False,
+            'message': 'Sample data uses rule-based outputs.'
         }
     }
     return jsonify(sample_data)

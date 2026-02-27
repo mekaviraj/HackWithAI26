@@ -1,4 +1,7 @@
+import os
 from typing import List, Dict
+
+from rag import ResourceRetriever, get_default_resource_path
 
 class StudyMaterialRecommender:
     """Recommends free study materials for weak areas"""
@@ -55,6 +58,12 @@ class StudyMaterialRecommender:
         ]
     }
     
+    def __init__(self) -> None:
+        self.retriever = None
+        resource_path = get_default_resource_path()
+        if os.path.exists(resource_path):
+            self.retriever = ResourceRetriever.from_file(resource_path)
+
     def recommend_materials(self, ranked_subtopics: List[Dict], topics: List[str]) -> Dict:
         """Generate study material recommendations for weak subtopics"""
         recommendations = {}
@@ -64,20 +73,16 @@ class StudyMaterialRecommender:
             topic = item.get("topic", "").lower()
             subtopic = item.get("subtopic", "Subtopic")
 
-            resources = self._lookup_resources(topic)
-            if not resources and topics:
-                resources = self._lookup_resources(topics[0].lower())
-
-            recommendations[subtopic] = resources[:3]
+            resources = self._rag_recommendations(topic, subtopic)
+            recommendations[subtopic] = resources
 
         return recommendations
 
-    def _lookup_resources(self, topic: str) -> List[Dict]:
-        for key in self.RESOURCES.keys():
-            if key in topic or topic in key:
-                return self.RESOURCES[key]
-        return self.RESOURCES.get("science", [])
-    
+    def _rag_recommendations(self, topic: str, subtopic: str) -> List[Dict]:
+        if not self.retriever:
+            return []
+        return self.retriever.retrieve(topic=topic, subtopic=subtopic, top_k=3)
+
     def get_study_tips(self, subject: str) -> List[str]:
         """Get specific study tips for a subject"""
         tips_by_subject = {
