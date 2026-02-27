@@ -1,0 +1,56 @@
+[
+  {
+    "topic": "Mechanics",
+    "subtopic": "Kinematics",
+    "resource_type": "video",
+    "difficulty_level": "easy",
+    "resource_title": "Kinematics Basics",
+    "resource_link_or_text": "https://youtu.be/kinematics-easy",
+    "estimated_time": 30
+  },
+  {
+    "topic": "Mechanics",
+    "subtopic": "Kinematics",
+    "resource_type": "notes",
+    "difficulty_level": "easy",
+    "resource_title": "Kinematics Notes",
+    "resource_link_or_text": "See attached PDF",
+    "estimated_time": 20
+  },
+  {
+    "topic": "Mechanics",
+    "subtopic": "Kinematics",
+    "resource_type": "practice",
+    "difficulty_level": "easy",
+    "resource_title": "Kinematics Practice Set 1",
+    "resource_link_or_text": "https://practice.com/kin1",
+    "estimated_time": 25
+  },
+  {
+    "topic": "Optics",
+    "subtopic": "Reflection",
+    "resource_type": "video",
+    "difficulty_level": "easy",
+    "resource_title": "Reflection of Light",
+    "resource_link_or_text": "https://youtu.be/optics-easy",
+    "estimated_time": 20
+  },
+  {
+    "topic": "Optics",
+    "subtopic": "Reflection",
+    "resource_type": "notes",
+    "difficulty_level": "easy",
+    "resource_title": "Reflection Notes",
+    "resource_link_or_text": "See attached PDF",
+    "estimated_time": 15
+  },
+  {
+    "topic": "Optics",
+    "subtopic": "Reflection",
+    "resource_type": "practice",
+    "difficulty_level": "easy",
+    "resource_title": "Reflection Practice Set 1",
+    "resource_link_or_text": "https://practice.com/optics1",
+    "estimated_time": 20
+  }
+]
