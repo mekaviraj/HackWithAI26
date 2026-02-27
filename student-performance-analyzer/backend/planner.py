@@ -166,16 +166,32 @@ class SevenDayPlanner:
                 '🧪 Practice tests from previous days',
                 '📊 Self-assessment and evaluation'
             ]
-        
-        activities = [
-            f'📚 Study core concepts of {topics[0] if topics else "focus area"}',
-            '✍️ Solve 10-15 practice problems',
-            '🎯 Attempt mock questions'
-        ]
-        
+
+        focus = topics[0] if topics else "focus area"
+        cycle = day % 3
+
+        if cycle == 1:
+            activities = [
+                f'📚 Study core concepts of {focus}',
+                f'✍️ Solve 10-15 foundational problems in {focus}',
+                f'🎯 Attempt 3-5 exam-style questions from {focus}'
+            ]
+        elif cycle == 2:
+            activities = [
+                f'📘 Review key formulas and shortcuts for {focus}',
+                f'🧪 Solve mixed-level practice set on {focus}',
+                f'📝 Analyze mistakes and retry missed {focus} questions'
+            ]
+        else:
+            activities = [
+                f'🔁 Rapid recap of {focus} notes and concepts',
+                f'⏱️ Timed practice block for {focus} (20-25 mins)',
+                f'🎯 Apply {focus} in previous-year style questions'
+            ]
+
         if day % 2 == 0:
             activities.append('📋 Take a short quiz')
-        
+
         return activities
     
     def _get_daily_goals(self, topics: List) -> List[str]:
@@ -246,23 +262,23 @@ class SevenDayPlanner:
         if day_variant == 1:
             activities = [
                 f'📚 Concept rebuild session for {subtopic}',
-                f'✍️ Guided practice set on {subtopic}',
+                f'✍️ Guided starter set on {subtopic}',
             ]
         elif day_variant == 2:
             activities = [
                 f'🎯 Application-focused problems for {subtopic}',
-                f'🧠 Derivation/formula recall drill for {subtopic}',
+                f'🧠 Formula/recall drill for {subtopic}',
             ]
         else:
             activities = [
-                f'📝 Error-correction workbook for {subtopic}',
+                f'📝 Error-correction worksheet for {subtopic}',
                 f'🔁 Mixed revision quiz on {subtopic}',
             ]
 
         if float(item.get('avg_time_incorrect', 0)) > 90:
             activities.append('⏱️ Timed drill: 10-12 questions in 25 minutes')
         else:
-            activities.append('🎯 Mixed conceptual + application questions')
+            activities.append('🎯 Concept + application mix (8-10 questions)')
         if day % 2 == 0:
             activities.append('📋 Mini quiz and error review')
         return activities

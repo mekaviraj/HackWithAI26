@@ -181,20 +181,75 @@ class StudyMaterialRecommender:
 
     def get_subtopic_study_tips(self, item: Dict) -> List[str]:
         subtopic = item.get('subtopic', 'this topic')
+        topic = item.get('topic', '')
         accuracy = float(item.get('accuracy', 0))
         avg_time_incorrect = float(item.get('avg_time_incorrect', 0))
         mistakes = int(item.get('mistakes', 0))
+        attempts = int(item.get('attempts', 0))
 
-        tips = [
-            f'Revise {subtopic} concepts first, then solve 10 focused problems.',
-            f'Keep an error log for {subtopic} and re-solve every wrong question after 24 hours.',
+        subject_label = f"{topic} - {subtopic}" if topic else subtopic
+        subtopic_key = str(subtopic).lower()
+
+        concept_tips = {
+            'newton': [
+                f'Create a force-body-diagram checklist for each {subject_label} question before solving.',
+                'Solve one First-Law, one Second-Law, and one Third-Law question in each practice block.'
+            ],
+            'kinematic': [
+                f'For {subject_label}, start every problem by listing known/unknown values and matching the correct motion equation.',
+                'Draw motion graphs (distance-time and velocity-time) to verify your final answer.'
+            ],
+            'refraction': [
+                f'In {subject_label}, write the normal line first, then apply Snell\'s law step-by-step.',
+                'Practice identifying ray direction changes from denser to rarer medium before calculation.'
+            ],
+            'current': [
+                f'For {subject_label}, redraw every circuit and mark series/parallel branches before using formulas.',
+                'Use Ohm\'s law with units at each step to avoid sign and conversion mistakes.'
+            ],
+            'thermo': [
+                f'For {subject_label}, track energy flow (Q, W, ΔU) using a sign-convention table in each problem.',
+                'Separate conceptual questions (laws/processes) from numerical ones during revision sessions.'
+            ],
+        }
+
+        selected_concept_tips = [
+            f'Revise core concepts of {subject_label} and then solve mixed questions from easy to hard.',
+            f'After each {subject_label} practice set, write one rule you missed and review it before the next set.'
         ]
 
+        for keyword, tips_for_keyword in concept_tips.items():
+            if keyword in subtopic_key:
+                selected_concept_tips = tips_for_keyword
+                break
+
+        tips = selected_concept_tips.copy()
+
         if accuracy < 50:
-            tips.append('Start with solved examples before moving to timed practice sets.')
+            tips.append('Start with solved examples for 20 minutes, then switch to timed unsolved questions.')
+        elif accuracy < 70:
+            tips.append('Use a 2:1 pattern: two medium questions followed by one hard question to build consistency.')
+        else:
+            tips.append('Prioritize exam-level mixed sets and focus on reducing avoidable errors.')
+
         if avg_time_incorrect > 90:
             tips.append('Use 20-25 minute timed drills to improve speed and decision-making.')
+        elif avg_time_incorrect > 60:
+            tips.append('Set a per-question time cap and skip-return strategy to avoid time traps.')
+
         if mistakes >= 3:
             tips.append('Classify mistakes (conceptual/calculation/rushed) and fix one category per session.')
 
-        return tips[:4]
+        if attempts < 5:
+            tips.append(f'Increase exposure: solve at least 12 additional {subject_label} questions this week.')
+
+        # Keep order and remove duplicates for cleaner display
+        deduped = []
+        seen = set()
+        for tip in tips:
+            normalized = tip.strip().lower()
+            if normalized and normalized not in seen:
+                seen.add(normalized)
+                deduped.append(tip)
+
+        return deduped[:4]
