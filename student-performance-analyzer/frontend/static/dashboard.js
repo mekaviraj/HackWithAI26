@@ -28,8 +28,6 @@ function renderDashboard() {
   document.getElementById("totalAttempts").textContent = summary.total_attempts;
   document.getElementById("overallAccuracy").textContent =
     summary.overall_accuracy.toFixed(1) + "%";
-  document.getElementById("strengthScore").textContent =
-    summary.strength_score.toFixed(1);
   document.getElementById("strengthLevel").textContent = summary.strength_level;
 
   // Render charts
@@ -206,10 +204,6 @@ function renderSummaryDetails(summary) {
                 <span class="stat-label">Avg Time (Incorrect)</span>
                 <span class="stat-value">${summary.avg_time_incorrect.toFixed(1)}s</span>
             </div>
-            <div class="stat-row">
-                <span class="stat-label">Strength Score</span>
-                <span class="stat-value">${summary.strength_score.toFixed(1)}</span>
-            </div>
         </div>
     `;
 }
@@ -233,10 +227,6 @@ function renderSubtopicRanking(ranking) {
                 <div class="stat-row">
                     <span class="stat-label">Attempts</span>
                     <span class="stat-value">${item.attempts}</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">Rank</span>
-                    <span class="stat-value">${item.rank}</span>
                 </div>
             </div>
         `;

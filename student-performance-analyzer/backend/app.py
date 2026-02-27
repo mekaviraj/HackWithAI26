@@ -95,7 +95,6 @@ def get_sample_data():
                 'overall_accuracy': 62.5,
                 'avg_time_correct': 42.8,
                 'avg_time_incorrect': 61.3,
-                'strength_score': 58.7,
                 'strength_level': 'Developing'
             },
             'accuracy_by_difficulty': [
@@ -112,9 +111,9 @@ def get_sample_data():
                 {'test_id': 'Test 2', 'strength_score': 61.2}
             ],
             'subtopic_ranking': [
-                {'rank': 1, 'subtopic': "Newton's Laws of Motion", 'topic': 'Physics', 'accuracy': 50.0, 'attempts': 8},
-                {'rank': 2, 'subtopic': 'Kinematics', 'topic': 'Physics', 'accuracy': 62.5, 'attempts': 8},
-                {'rank': 3, 'subtopic': 'Work and Energy', 'topic': 'Physics', 'accuracy': 75.0, 'attempts': 8}
+                {'subtopic': "Newton's Laws of Motion", 'topic': 'Physics', 'accuracy': 50.0, 'attempts': 8},
+                {'subtopic': 'Kinematics', 'topic': 'Physics', 'accuracy': 62.5, 'attempts': 8},
+                {'subtopic': 'Work and Energy', 'topic': 'Physics', 'accuracy': 75.0, 'attempts': 8}
             ],
             'topics': ['Physics']
         },

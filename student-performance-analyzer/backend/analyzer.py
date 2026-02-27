@@ -41,7 +41,6 @@ class PerformanceAnalyzer:
                 "overall_accuracy": round(overall_accuracy * 100, 2),
                 "avg_time_correct": round(time_comparison["avg_time_correct"], 2),
                 "avg_time_incorrect": round(time_comparison["avg_time_incorrect"], 2),
-                "strength_score": round(strength_score, 2),
                 "strength_level": strength_level,
             },
             "accuracy_by_difficulty": accuracy_by_difficulty,
@@ -148,8 +147,6 @@ class PerformanceAnalyzer:
             })
 
         ranking.sort(key=lambda x: x["accuracy"])
-        for idx, item in enumerate(ranking, start=1):
-            item["rank"] = idx
         return ranking
 
     def _strength_progression(self) -> List[Dict]:
