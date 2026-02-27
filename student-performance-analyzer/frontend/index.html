@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Performance Analyzer</title>
+    <link rel="stylesheet" href="static/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div class="header-content">
+          <h1>📊 Student Performance Analyzer</h1>
+          <p>
+            Analyze test data, identify weaknesses, and create personalized
+            study plans
+          </p>
+        </div>
+      </header>
+
+      <div class="content">
+        <!-- Upload Section -->
+        <div class="card upload-section">
+          <h2>Step 1: Upload Test Data</h2>
+          <div class="upload-area" id="uploadArea">
+            <svg
+              class="upload-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <h3>Drag & drop your CSV file here</h3>
+            <p>or</p>
+            <button class="btn btn-primary" id="browseBtn">Browse Files</button>
+            <p class="file-info">
+              CSV format with student names and subject scores
+            </p>
+          </div>
+          <input
+            type="file"
+            id="fileInput"
+            accept=".csv"
+            style="display: none"
+          />
+          <div id="fileName" class="file-name"></div>
+        </div>
+
+        <!-- File Format Guide -->
+        <div class="card format-guide">
+          <h2>📋 CSV Format Guide</h2>
+          <p>Your CSV file should have this structure:</p>
+          <table class="format-table">
+            <tr>
+              <td><strong>question</strong></td>
+              <td><strong>correct</strong></td>
+              <td><strong>time_seconds</strong></td>
+              <td><strong>topic</strong></td>
+              <td><strong>subtopic</strong></td>
+              <td><strong>difficulty</strong></td>
+              <td><strong>test_id</strong></td>
+            </tr>
+            <tr>
+              <td>Find net force on a block</td>
+              <td>true</td>
+              <td>45</td>
+              <td>Physics</td>
+              <td>Newton's Laws of Motion</td>
+              <td>2</td>
+              <td>Test 1</td>
+            </tr>
+            <tr>
+              <td>Projectile motion range</td>
+              <td>false</td>
+              <td>62</td>
+              <td>Physics</td>
+              <td>Kinematics</td>
+              <td>3</td>
+              <td>Test 1</td>
+            </tr>
+          </table>
+          <p style="margin-top: 1rem; font-size: 0.9rem; color: #666">
+            Required columns: question, correct (true/false or 1/0),
+            time_seconds, topic, subtopic, difficulty (1-3). Optional: test_id.
+          </p>
+        </div>
+
+        <!-- Buttons -->
+        <div class="action-buttons">
+          <button class="btn btn-success" id="analyzeBtn" disabled>
+            🔍 Analyze Data
+          </button>
+          <button class="btn btn-secondary" id="sampleBtn">
+            📊 View Sample Analysis
+          </button>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="loadingSpinner" class="loading-spinner" style="display: none">
+          <div class="spinner"></div>
+          <p>Analyzing your data...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div
+          id="errorMessage"
+          class="error-message"
+          style="display: none"
+        ></div>
+
+        <!-- Success Message -->
+        <div id="successMessage" class="success-message" style="display: none">
+          ✅ Analysis complete! Redirecting to dashboard...
+        </div>
+      </div>
+
+      <footer>
+        <p>Student Performance Analyzer MVP | Powered by Flask & AI</p>
+      </footer>
+    </div>
+
+    <script src="static/app.js"></script>
+  </body>
+</html>

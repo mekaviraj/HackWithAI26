@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Analysis Dashboard</title>
+    <link rel="stylesheet" href="static/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div class="header-content">
+          <h1>📊 Analysis Dashboard</h1>
+          <button class="btn btn-secondary" onclick="goBack()">
+            ← Back to Upload
+          </button>
+        </div>
+      </header>
+
+      <div class="content">
+        <!-- Overview Stats -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <h3>Total Attempts</h3>
+            <p class="stat-value" id="totalAttempts">-</p>
+          </div>
+          <div class="stat-card">
+            <h3>Overall Accuracy</h3>
+            <p class="stat-value" id="overallAccuracy">-</p>
+          </div>
+          <div class="stat-card">
+            <h3>Strength Score</h3>
+            <p class="stat-value" id="strengthScore">-</p>
+          </div>
+          <div class="stat-card">
+            <h3>Strength Level</h3>
+            <p class="stat-value" id="strengthLevel">-</p>
+          </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="chart-section">
+          <div class="chart-container">
+            <h2>Accuracy by Difficulty</h2>
+            <canvas id="accuracyChart"></canvas>
+          </div>
+
+          <div class="chart-container">
+            <h2>Time Comparison (Correct vs Incorrect)</h2>
+            <canvas id="timeChart"></canvas>
+          </div>
+
+          <div class="chart-container">
+            <h2>Strength Progression Over Tests</h2>
+            <canvas id="strengthChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Detailed Analysis -->
+        <div class="card">
+          <h2>📈 Detailed Analysis & Subtopic Ranking</h2>
+          <div id="summaryDetails" class="detailed-analysis"></div>
+          <div id="subtopicRanking" class="detailed-analysis"></div>
+        </div>
+
+        <!-- 7-Day Plan -->
+        <div class="card">
+          <h2>📅 7-Day Problem-Focused Study Plan</h2>
+          <div id="studyPlan" class="study-plan"></div>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="card">
+          <h2>📚 Recommended Free Study Materials</h2>
+          <div id="recommendations" class="recommendations"></div>
+        </div>
+
+        <!-- Study Tips -->
+        <div class="card">
+          <h2>💡 Study Tips for Weak Areas</h2>
+          <div id="studyTips" class="study-tips"></div>
+        </div>
+
+        <!-- Export Options -->
+        <div class="card action-buttons">
+          <button class="btn btn-primary" onclick="exportToPDF()">
+            📄 Export as PDF
+          </button>
+          <button class="btn btn-primary" onclick="downloadPlan()">
+            💾 Download Plan
+          </button>
+          <button class="btn btn-secondary" onclick="goBack()">
+            ← New Analysis
+          </button>
+        </div>
+      </div>
+
+      <footer>
+        <p>Student Performance Analyzer MVP | Generated Analysis Report</p>
+      </footer>
+    </div>
+
+    <script src="static/dashboard.js"></script>
+  </body>
+</html>
