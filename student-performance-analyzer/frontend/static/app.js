@@ -10,6 +10,12 @@ const errorMessage = document.getElementById("errorMessage");
 const successMessage = document.getElementById("successMessage");
 
 let selectedFile = null;
+const API_BASE =
+  window.location.protocol === "file:" ? "http://127.0.0.1:5000" : "";
+
+function getDashboardUrl() {
+  return window.location.protocol === "file:" ? "dashboard.html" : "/dashboard";
+}
 
 // Browse button click
 browseBtn.addEventListener("click", () => {
@@ -71,7 +77,7 @@ async function analyzeFile() {
   clearMessages();
 
   try {
-    const response = await fetch("/api/upload", {
+    const response = await fetch(`${API_BASE}/api/upload`, {
       method: "POST",
       body: formData,
     });
@@ -87,7 +93,7 @@ async function analyzeFile() {
     showSuccess("Analysis complete! Redirecting to dashboard...");
 
     setTimeout(() => {
-      window.location.href = "/dashboard";
+      window.location.href = getDashboardUrl();
     }, 1500);
   } catch (error) {
     showError(`Error: ${error.message}`);
@@ -100,14 +106,14 @@ async function loadSampleData() {
   clearMessages();
 
   try {
-    const response = await fetch("/api/sample");
+    const response = await fetch(`${API_BASE}/api/sample`);
     const data = await response.json();
 
     sessionStorage.setItem("analysisData", JSON.stringify(data));
     showSuccess("Sample data loaded! Redirecting to dashboard...");
 
     setTimeout(() => {
-      window.location.href = "/dashboard";
+      window.location.href = getDashboardUrl();
     }, 1500);
   } catch (error) {
     showError(`Error loading sample data: ${error.message}`);

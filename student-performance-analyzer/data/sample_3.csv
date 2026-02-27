@@ -1,0 +1,21 @@
+student_id,test_id,question_id,subject,topic,subtopic,difficulty_level,is_correct,time_taken,topic_weightage
+S003,T201,Q001,Physics,Mechanics,Newton's Laws,hard,0,162,high
+S003,T201,Q002,Physics,Mechanics,Kinematics,medium,0,124,high
+S003,T201,Q003,Physics,Mechanics,Work and Energy,easy,1,84,high
+S003,T201,Q004,Physics,Optics,Refraction,medium,0,128,low
+S003,T201,Q005,Physics,Optics,Reflection,easy,0,98,low
+S003,T201,Q006,Physics,Thermodynamics,Heat Transfer,hard,0,170,high
+S003,T201,Q007,Physics,Thermodynamics,Thermal Expansion,medium,0,122,high
+S003,T201,Q008,Physics,Electromagnetism,Current Electricity,hard,0,166,high
+S003,T201,Q009,Physics,Electromagnetism,Magnetic Effects,medium,1,102,high
+S003,T201,Q010,Physics,Modern Physics,Photoelectric Effect,easy,1,80,low
+S003,T202,Q011,Physics,Mechanics,Projectile Motion,hard,0,158,high
+S003,T202,Q012,Physics,Mechanics,Circular Motion,medium,0,118,high
+S003,T202,Q013,Physics,Optics,Lens Formula,hard,0,152,low
+S003,T202,Q014,Physics,Optics,Optical Instruments,medium,1,96,low
+S003,T202,Q015,Physics,Thermodynamics,First Law of Thermodynamics,hard,0,169,high
+S003,T202,Q016,Physics,Thermodynamics,Calorimetry,easy,1,82,high
+S003,T202,Q017,Physics,Electromagnetism,Ohm's Law,easy,0,104,high
+S003,T202,Q018,Physics,Electromagnetism,Kirchhoff's Laws,hard,0,176,high
+S003,T202,Q019,Physics,Modern Physics,Atomic Models,medium,1,94,low
+S003,T202,Q020,Physics,Modern Physics,Nuclear Physics,hard,0,168,low

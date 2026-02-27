@@ -1,3 +1,21 @@
-question,correct,time_seconds,topic,subtopic,difficulty,test_id
-Find net force on a block,true,45,Physics,Newton's Laws of Motion,2,Test 1
-
+student_id,test_id,question_id,subject,topic,subtopic,difficulty_level,is_correct,time_taken,topic_weightage
+S001,T001,Q001,Physics,Mechanics,Newton's Laws,hard,0,150,high
+S001,T001,Q002,Physics,Mechanics,Kinematics,medium,1,95,high
+S001,T001,Q003,Physics,Mechanics,Work and Energy,easy,1,70,high
+S001,T001,Q004,Physics,Optics,Refraction,medium,0,110,low
+S001,T001,Q005,Physics,Optics,Reflection,easy,1,65,low
+S001,T001,Q006,Physics,Thermodynamics,Heat Transfer,hard,0,160,high
+S001,T001,Q007,Physics,Thermodynamics,Thermal Expansion,medium,1,100,high
+S001,T001,Q008,Physics,Electromagnetism,Current Electricity,hard,0,155,high
+S001,T001,Q009,Physics,Electromagnetism,Magnetic Effects,medium,0,120,high
+S001,T001,Q010,Physics,Modern Physics,Photoelectric Effect,easy,1,75,low
+S001,T002,Q011,Physics,Mechanics,Projectile Motion,hard,0,145,high
+S001,T002,Q012,Physics,Mechanics,Circular Motion,medium,1,98,high
+S001,T002,Q013,Physics,Optics,Lens Formula,hard,0,140,low
+S001,T002,Q014,Physics,Optics,Optical Instruments,medium,1,105,low
+S001,T002,Q015,Physics,Thermodynamics,First Law of Thermodynamics,hard,0,150,high
+S001,T002,Q016,Physics,Thermodynamics,Calorimetry,easy,1,78,high
+S001,T002,Q017,Physics,Electromagnetism,Ohm's Law,easy,1,72,high
+S001,T002,Q018,Physics,Electromagnetism,Kirchhoff's Laws,hard,0,165,high
+S001,T002,Q019,Physics,Modern Physics,Atomic Models,medium,1,92,low
+S001,T002,Q020,Physics,Modern Physics,Nuclear Physics,hard,0,158,low

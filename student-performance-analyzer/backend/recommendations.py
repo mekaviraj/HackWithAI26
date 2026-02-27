@@ -74,6 +74,8 @@ class StudyMaterialRecommender:
             subtopic = item.get("subtopic", "Subtopic")
 
             resources = self._rag_recommendations(topic, subtopic)
+            if not resources:
+                resources = self._fallback_recommendations(topic, subtopic)
             recommendations[subtopic] = resources
 
         return recommendations
@@ -82,6 +84,46 @@ class StudyMaterialRecommender:
         if not self.retriever:
             return []
         return self.retriever.retrieve(topic=topic, subtopic=subtopic, top_k=3)
+
+    def _fallback_recommendations(self, topic: str, subtopic: str) -> List[Dict]:
+        key = (topic or "").strip().lower()
+        subtopic_key = (subtopic or "").strip().lower()
+
+        subtopic_map = {
+            'newton': [
+                {'name': 'Khan Academy - Forces and Newton Laws', 'url': 'https://www.khanacademy.org/science/physics/forces-newtons-laws', 'type': 'Video Lessons'},
+                {'name': 'PhET - Forces and Motion', 'url': 'https://phet.colorado.edu/en/simulations/filter?subjects=physics', 'type': 'Interactive Simulation'},
+                {'name': 'Physics Classroom - Newton Laws', 'url': 'https://www.physicsclassroom.com/class/newtlaws', 'type': 'Concept + Practice'},
+            ],
+            'kinematic': [
+                {'name': 'Khan Academy - One-dimensional motion', 'url': 'https://www.khanacademy.org/science/physics/one-dimensional-motion', 'type': 'Video Lessons'},
+                {'name': 'Physics Classroom - Kinematics', 'url': 'https://www.physicsclassroom.com/class/1DKin', 'type': 'Concept + Practice'},
+                {'name': 'OpenStax - Motion in a Straight Line', 'url': 'https://openstax.org/books/college-physics', 'type': 'Free Textbook'},
+            ],
+            'refraction': [
+                {'name': 'Khan Academy - Refraction and Snell law', 'url': 'https://www.khanacademy.org/science/physics/geometric-optics', 'type': 'Video Lessons'},
+                {'name': 'PhET - Bending Light', 'url': 'https://phet.colorado.edu/en/simulations/bending-light', 'type': 'Interactive Simulation'},
+                {'name': 'Physics Classroom - Refraction', 'url': 'https://www.physicsclassroom.com/class/refrn', 'type': 'Concept + Practice'},
+            ],
+            'current': [
+                {'name': 'Khan Academy - Electric current', 'url': 'https://www.khanacademy.org/science/physics/circuits-topic', 'type': 'Video Lessons'},
+                {'name': 'PhET - Circuit Construction Kit', 'url': 'https://phet.colorado.edu/en/simulations/circuit-construction-kit-dc', 'type': 'Interactive Simulation'},
+                {'name': 'Physics Classroom - Current Electricity', 'url': 'https://www.physicsclassroom.com/class/circuits', 'type': 'Concept + Practice'},
+            ],
+            'thermo': [
+                {'name': 'Khan Academy - Thermodynamics', 'url': 'https://www.khanacademy.org/science/physics/thermodynamics', 'type': 'Video Lessons'},
+                {'name': 'OpenStax - Temperature and Heat', 'url': 'https://openstax.org/books/college-physics', 'type': 'Free Textbook'},
+                {'name': 'Physics Classroom - Thermal Physics', 'url': 'https://www.physicsclassroom.com/class/thermalP', 'type': 'Concept + Practice'},
+            ],
+        }
+
+        for keyword, resources in subtopic_map.items():
+            if keyword in subtopic_key:
+                return resources
+
+        if key in self.RESOURCES:
+            return self.RESOURCES[key][:3]
+        return self.RESOURCES.get('physics', self.RESOURCES.get('science', []))[:3]
 
     def get_study_tips(self, subject: str) -> List[str]:
         """Get specific study tips for a subject"""
@@ -119,9 +161,40 @@ class StudyMaterialRecommender:
         }
         
         subject_lower = subject.lower()
+        physics_topics = {
+            'mechanics',
+            'optics',
+            'thermodynamics',
+            'electromagnetism',
+            'modern physics',
+            'current electricity',
+            'magnetic effects',
+        }
+        if subject_lower in physics_topics:
+            subject_lower = 'physics'
         return tips_by_subject.get(subject_lower, [
             'Break the subject into smaller topics',
             'Practice regularly with varied resources',
             'Join study groups or discussion forums',
             'Teach concepts to others'
         ])
+
+    def get_subtopic_study_tips(self, item: Dict) -> List[str]:
+        subtopic = item.get('subtopic', 'this topic')
+        accuracy = float(item.get('accuracy', 0))
+        avg_time_incorrect = float(item.get('avg_time_incorrect', 0))
+        mistakes = int(item.get('mistakes', 0))
+
+        tips = [
+            f'Revise {subtopic} concepts first, then solve 10 focused problems.',
+            f'Keep an error log for {subtopic} and re-solve every wrong question after 24 hours.',
+        ]
+
+        if accuracy < 50:
+            tips.append('Start with solved examples before moving to timed practice sets.')
+        if avg_time_incorrect > 90:
+            tips.append('Use 20-25 minute timed drills to improve speed and decision-making.')
+        if mistakes >= 3:
+            tips.append('Classify mistakes (conceptual/calculation/rushed) and fix one category per session.')
+
+        return tips[:4]

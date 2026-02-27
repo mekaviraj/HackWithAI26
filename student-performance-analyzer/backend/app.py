@@ -3,6 +3,8 @@ from flask_cors import CORS
 import pandas as pd
 import os
 import logging
+import sqlite3
+import csv
 
 # Import modules
 from analyzer import PerformanceAnalyzer
@@ -29,6 +31,39 @@ logger.info("Flask app initialized successfully")
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def build_revision_summary(analysis):
+    summary = analysis.get('summary', {})
+    ranked_subtopics = analysis.get('subtopic_ranking', [])
+
+    overall_accuracy = float(summary.get('overall_accuracy', 0.0))
+    total_attempts = int(summary.get('total_attempts', 0))
+
+    high_weightage_weak = [
+        item for item in ranked_subtopics
+        if item.get('topic_weightage') == 'high'
+    ][:2]
+    low_weightage_weak = [
+        item for item in ranked_subtopics
+        if item.get('topic_weightage') == 'low'
+    ][:2]
+
+    high_names = ', '.join([item.get('subtopic', 'N/A') for item in high_weightage_weak])
+    low_names = ', '.join([item.get('subtopic', 'N/A') for item in low_weightage_weak])
+
+    if not high_names:
+        high_names = 'no major high-weightage weak chapter detected'
+    if not low_names:
+        low_names = 'no major low-weightage weak chapter detected'
+
+    possible_gain = max(5, min(20, int((100 - overall_accuracy) * 0.35)))
+
+    return (
+        f"The test shows an overall accuracy of {overall_accuracy:.1f}% across {total_attempts} attempts. "
+        f"The most important weak areas are {high_names}; these should be your first revision priority because they carry higher weightage and have direct impact on marks. "
+        f"Secondary weak areas include {low_names}, which should be covered after stabilizing high-weightage chapters. "
+        f"With focused practice on the priority chapters and error correction in the 7-day plan, you can realistically improve by around {possible_gain}% in score."
+    )
 
 @app.route('/')
 def index():
@@ -79,12 +114,13 @@ def upload_file():
         logger.info("Analysis complete")
         
         ranked_subtopics = analysis['subtopic_ranking']
+        prioritized_topics = analysis.get('prioritized_topics', [])
         topics = analysis['topics']
         logger.info(f"Ranked subtopics: {[s['subtopic'] for s in ranked_subtopics]}")
 
         # Generate 7-day plan
         logger.info("Generating 7-day study plan...")
-        planner = SevenDayPlanner(ranked_subtopics)
+        planner = SevenDayPlanner(ranked_subtopics, prioritized_topics)
         plan = planner.generate_plan()
         logger.info("Study plan generated")
         
@@ -96,14 +132,18 @@ def upload_file():
         
         study_tips = {}
         for item in ranked_subtopics[:5]:
-            topic = item.get('topic', '')
             subtopic = item.get('subtopic', 'Subtopic')
-            study_tips[subtopic] = recommender.get_study_tips(topic)
+            study_tips[subtopic] = recommender.get_subtopic_study_tips(item)
         logger.info("Study tips generated")
 
+        revision_summary = build_revision_summary(analysis)
+
         # Optional GenAI override
-        logger.info("=== Attempting GenAI call ===")
-        genai_payload = generate_study_guidance(analysis, recommendations)
+        use_genai = os.getenv("USE_GENAI", "false").strip().lower() == "true"
+        genai_payload = None
+        if use_genai:
+            logger.info("=== Attempting GenAI call ===")
+            genai_payload = generate_study_guidance(analysis, recommendations)
         
         if genai_payload:
             logger.info("✓ GenAI override applied for plan, recommendations, and tips.")
@@ -116,11 +156,11 @@ def upload_file():
                 "message": "✓ GenAI applied to plan, materials, and tips."
             }
         else:
-            logger.warning("GenAI call failed or returned None; falling back to rule-based outputs.")
-            print("[WARNING] GenAI not used; falling back to rule-based outputs.")
+            logger.warning("GenAI disabled/failed; using dynamic rule-based outputs.")
+            print("[WARNING] GenAI not used; using dynamic rule-based outputs.")
             genai_status = {
                 "used": False, 
-                "message": "⚠ GenAI unavailable. Using rule-based outputs."
+                "message": "Using dynamic rule-based outputs."
             }
         
         response_data = {
@@ -129,6 +169,7 @@ def upload_file():
             'plan': plan,
             'recommendations': recommendations,
             'study_tips': study_tips,
+            'revision_summary': revision_summary,
             'genai_status': genai_status
         }
         
@@ -146,75 +187,113 @@ def upload_file():
 
 @app.route('/api/sample', methods=['GET'])
 def get_sample_data():
-    """Get sample analysis data for demo"""
-    sample_data = {
-        'analysis': {
-            'summary': {
-                'total_attempts': 24,
-                'overall_accuracy': 62.5,
-                'avg_time_correct': 42.8,
-                'avg_time_incorrect': 61.3,
-                'strength_level': 'Developing'
-            },
-            'accuracy_by_difficulty': [
-                {'difficulty': 1, 'accuracy': 80.0, 'attempts': 8},
-                {'difficulty': 2, 'accuracy': 60.0, 'attempts': 10},
-                {'difficulty': 3, 'accuracy': 42.9, 'attempts': 6}
-            ],
-            'time_comparison': {
-                'avg_time_correct': 42.8,
-                'avg_time_incorrect': 61.3
-            },
-            'strength_progression': [
-                {'test_id': 'Test 1', 'strength_score': 55.1},
-                {'test_id': 'Test 2', 'strength_score': 61.2}
-            ],
-            'subtopic_ranking': [
-                {'subtopic': "Newton's Laws of Motion", 'topic': 'Physics', 'accuracy': 50.0, 'attempts': 8},
-                {'subtopic': 'Kinematics', 'topic': 'Physics', 'accuracy': 62.5, 'attempts': 8},
-                {'subtopic': 'Work and Energy', 'topic': 'Physics', 'accuracy': 75.0, 'attempts': 8}
-            ],
-            'topics': ['Physics']
-        },
-        'plan': [
-            {
-                'day': 1,
-                'date': '2026-02-27',
-                'focus': ["Newton's Laws of Motion"],
-                'study_time': '2-3 hours',
-                'activities': ["📚 Study core concepts of Newton's Laws of Motion", '✍️ Solve 10-15 practice problems', '🎯 Attempt mock questions'],
-                'goals': ["Understand key concepts in Newton's Laws of Motion", "Practice at least 10 questions in Newton's Laws of Motion", "Identify remaining weak points in Newton's Laws of Motion", 'Aim for 70%+ accuracy in practice']
-            },
-            {
-                'day': 2,
-                'date': '2026-02-28',
-                'focus': ["Newton's Laws of Motion"],
-                'study_time': '2-3 hours',
-                'activities': ["📚 Study core concepts of Newton's Laws of Motion", '✍️ Solve 10-15 practice problems', '🎯 Attempt mock questions', '📋 Take a short quiz'],
-                'goals': ["Understand key concepts in Newton's Laws of Motion", "Practice at least 10 questions in Newton's Laws of Motion", "Identify remaining weak points in Newton's Laws of Motion", 'Aim for 70%+ accuracy in practice']
-            }
-        ],
-        'recommendations': {
-            "Newton's Laws of Motion": [
-                {'name': 'Khan Academy - Physics', 'url': 'https://www.khanacademy.org/science/physics', 'type': 'Video Lessons'},
-                {'name': 'OpenStax Physics Textbook', 'url': 'https://openstax.org/details/books/college-physics', 'type': 'Free Textbook'},
-                {'name': 'Physics Simulation - PhET', 'url': 'https://phet.colorado.edu', 'type': 'Interactive Simulations'}
-            ]
-        },
-        'study_tips': {
-            "Newton's Laws of Motion": ['Draw diagrams for each problem', 'Link concepts to real-world examples', 'Use simulation software to visualize concepts']
-        },
-        'genai_status': {
-            'used': False,
-            'message': 'Sample data uses rule-based outputs.'
-        }
-    }
-    return jsonify(sample_data)
+    """Get sample analysis data from current sample CSV using real pipeline logic"""
+    try:
+        df = pd.read_csv('../data/sample_data.csv')
+        if df.empty:
+            return jsonify({'error': 'Sample CSV is empty'}), 400
 
+        analyzer = PerformanceAnalyzer(df)
+        analysis = analyzer.analyze()
+
+        ranked_subtopics = analysis['subtopic_ranking']
+        prioritized_topics = analysis.get('prioritized_topics', [])
+        topics = analysis['topics']
+
+        planner = SevenDayPlanner(ranked_subtopics, prioritized_topics)
+        plan = planner.generate_plan()
+
+        recommender = StudyMaterialRecommender()
+        recommendations = recommender.recommend_materials(ranked_subtopics, topics)
+
+        study_tips = {}
+        for item in ranked_subtopics[:5]:
+            subtopic = item.get('subtopic', 'Subtopic')
+            study_tips[subtopic] = recommender.get_subtopic_study_tips(item)
+
+        revision_summary = build_revision_summary(analysis)
+
+        return jsonify({
+            'success': True,
+            'analysis': analysis,
+            'plan': plan,
+            'recommendations': recommendations,
+            'study_tips': study_tips,
+            'revision_summary': revision_summary,
+            'genai_status': {
+                'used': False,
+                'message': 'Sample data generated dynamically from sample CSV.'
+            }
+        })
+    except Exception as e:
+        logger.error(f"Error generating sample data: {e}", exc_info=True)
+        return jsonify({'error': f'Error generating sample data: {str(e)}'}), 500
+# --------------------------------------------------
+# DATABASE INITIALIZATION (ADDED)
+# --------------------------------------------------
+def init_db():
+    conn = sqlite3.connect('student.db')
+    c = conn.cursor()
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS questions (
+            question_id TEXT PRIMARY KEY,
+            test_id TEXT,
+            subject TEXT,
+            topic TEXT,
+            subtopic TEXT,
+            difficulty_level TEXT,
+            is_correct INTEGER,
+            time_taken INTEGER,
+            topic_weightage TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
+    logger.info("Database initialized successfully")
+
+def load_sample_data(csv_path='../data/sample_data.csv'):
+    conn = sqlite3.connect('student.db')
+    c = conn.cursor()
+
+    with open(csv_path, newline='', encoding='utf-8') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            if not row.get('question_id'):
+                continue
+
+            c.execute('''
+                INSERT OR REPLACE INTO questions (
+                    question_id,
+                    test_id,
+                    subject,
+                    topic,
+                    subtopic,
+                    difficulty_level,
+                    is_correct,
+                    time_taken,
+                    topic_weightage
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                row.get('question_id'),
+                row.get('test_id'),
+                row.get('subject'),
+                row.get('topic'),
+                row.get('subtopic'),
+                row.get('difficulty_level'),
+                int(row.get('is_correct', 0)),
+                int(row.get('time_taken', 0)),
+                (row.get('topic_weightage') or 'low').strip().lower(),
+            ))
+
+    conn.commit()
+    conn.close()
+    logger.info("Sample data loaded successfully")
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
     return jsonify({'status': 'healthy'}), 200
 
 if __name__ == '__main__':
+    init_db()
+    load_sample_data()
     app.run(debug=True, port=5000)

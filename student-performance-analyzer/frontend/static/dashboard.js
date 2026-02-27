@@ -38,6 +38,7 @@ function renderDashboard() {
   // Render detailed analysis
   renderSummaryDetails(summary);
   renderSubtopicRanking(analysis.subtopic_ranking);
+  renderRevisionSummary(analysisData.revision_summary, analysis);
 
   // Render 7-day plan
   renderStudyPlan(analysisData.plan);
@@ -47,6 +48,46 @@ function renderDashboard() {
 
   // Render study tips
   renderStudyTips(analysisData.study_tips);
+
+  // Render GenAI status
+  renderGenaiStatus(analysisData.genai_status);
+}
+
+function renderGenaiStatus(genaiStatus) {
+  const titleEl = document.getElementById("genaiStatusTitle");
+  const messageEl = document.getElementById("genaiStatusMessage");
+
+  if (!titleEl || !messageEl) return;
+
+  if (!genaiStatus) {
+    titleEl.textContent = "⚠ Status unavailable";
+    messageEl.textContent = "No GenAI status returned by backend.";
+    return;
+  }
+
+  const used = !!genaiStatus.used;
+  titleEl.textContent = used ? "✅ GenAI started and applied" : "⚙️ Rule-based mode";
+  messageEl.textContent = genaiStatus.message || (used ? "GenAI outputs applied." : "Using dynamic fallback logic.");
+}
+
+function renderRevisionSummary(revisionSummary, analysis) {
+  const el = document.getElementById("revisionSummaryText");
+  if (!el) return;
+
+  if (revisionSummary && revisionSummary.trim().length > 0) {
+    el.textContent = revisionSummary;
+    return;
+  }
+
+  const summary = analysis?.summary || {};
+  const ranked = analysis?.subtopic_ranking || [];
+  const high = ranked
+    .filter((item) => item.topic_weightage === "high")
+    .slice(0, 2)
+    .map((item) => item.subtopic)
+    .join(", ");
+
+  el.textContent = `This test shows ${Number(summary.overall_accuracy || 0).toFixed(1)}% overall accuracy. Prioritize high-weightage weak chapters first${high ? `, especially ${high}` : ""}, then revise remaining weak areas with timed practice and error correction to improve marks.`;
 }
 
 function renderAccuracyChart(accuracyByDifficulty) {
@@ -236,29 +277,40 @@ function renderSubtopicRanking(ranking) {
 
 function renderStudyPlan(plan) {
   const container = document.getElementById("studyPlan");
+  if (!Array.isArray(plan) || plan.length === 0) {
+    container.innerHTML = "<p>No study plan available.</p>";
+    return;
+  }
 
   let html = "";
   for (const day of plan) {
+    const dayFocus = Array.isArray(day.focus)
+      ? day.focus
+      : typeof day.focus === "string" && day.focus
+        ? [day.focus]
+        : [];
+    const dayActivities = Array.isArray(day.activities) ? day.activities : [];
+    const dayGoals = Array.isArray(day.goals) ? day.goals : [];
     const focusText =
-      day.focus && day.focus.length > 0 ? day.focus.join(", ") : "Revision";
-    const activitiesHtml = day.activities
+      dayFocus.length > 0 ? dayFocus.join(", ") : "Revision";
+    const activitiesHtml = dayActivities
       .map((activity) => `<li>${activity}</li>`)
       .join("");
-    const goalsHtml = day.goals.map((goal) => `<li>${goal}</li>`).join("");
+    const goalsHtml = dayGoals.map((goal) => `<li>${goal}</li>`).join("");
 
     html += `
             <div class="day-plan">
                 <h4>Day ${day.day}</h4>
-                <div class="day-date">${day.date}</div>
+                <div class="day-date">${day.date || "-"}</div>
                 <div class="day-focus">
                     <strong>Focus:</strong>
                     ${focusText}
                 </div>
                 <div>
-                    <strong style="display: block; margin-bottom: 0.5rem;">Study Time: ${day.study_time}</strong>
+                    <strong style="display: block; margin-bottom: 0.5rem;">Study Time: ${day.study_time || "2-3 hours"}</strong>
                     <strong style="display: block; margin-bottom: 0.5rem;">Activities:</strong>
                     <ul class="activities-list">
-                        ${activitiesHtml}
+                        ${activitiesHtml || "<li>Review key concepts and solve practice questions</li>"}
                     </ul>
                 </div>
             </div>
@@ -269,10 +321,15 @@ function renderStudyPlan(plan) {
 
 function renderRecommendations(recommendations) {
   const container = document.getElementById("recommendations");
+  if (!recommendations || Object.keys(recommendations).length === 0) {
+    container.innerHTML = "<p>No recommendations available.</p>";
+    return;
+  }
 
   let html = "";
   for (const [subject, resources] of Object.entries(recommendations)) {
-    const resourcesHtml = resources
+    const safeResources = Array.isArray(resources) ? resources : [];
+    const resourcesHtml = safeResources
       .map(
         (resource) => `
             <div class="resource">
@@ -297,10 +354,15 @@ function renderRecommendations(recommendations) {
 
 function renderStudyTips(studyTips) {
   const container = document.getElementById("studyTips");
+  if (!studyTips || Object.keys(studyTips).length === 0) {
+    container.innerHTML = "<p>No study tips available.</p>";
+    return;
+  }
 
   let html = "";
   for (const [subject, tips] of Object.entries(studyTips)) {
-    const tipsHtml = tips.map((tip) => `<li>${tip}</li>`).join("");
+    const safeTips = Array.isArray(tips) ? tips : [];
+    const tipsHtml = safeTips.map((tip) => `<li>${tip}</li>`).join("");
 
     html += `
             <div class="tips-card">
@@ -316,7 +378,8 @@ function renderStudyTips(studyTips) {
 
 function goBack() {
   sessionStorage.clear();
-  window.location.href = "/";
+  window.location.href =
+    window.location.protocol === "file:" ? "index.html" : "/";
 }
 
 function exportToPDF() {
@@ -332,16 +395,23 @@ function downloadPlan() {
   planText += "=".repeat(50) + "\n\n";
 
   for (const day of analysisData.plan) {
+    const focus = Array.isArray(day.focus)
+      ? day.focus
+      : typeof day.focus === "string" && day.focus
+        ? [day.focus]
+        : [];
+    const activities = Array.isArray(day.activities) ? day.activities : [];
+    const goals = Array.isArray(day.goals) ? day.goals : [];
     planText += `Day ${day.day} - ${day.date}\n`;
     planText += "-".repeat(30) + "\n";
-    planText += `Focus: ${day.focus.join(", ")}\n`;
-    planText += `Study Time: ${day.study_time}\n`;
+    planText += `Focus: ${focus.join(", ")}\n`;
+    planText += `Study Time: ${day.study_time || "2-3 hours"}\n`;
     planText += `\nActivities:\n`;
-    day.activities.forEach((activity) => {
+    activities.forEach((activity) => {
       planText += `  • ${activity}\n`;
     });
     planText += `\nGoals:\n`;
-    day.goals.forEach((goal) => {
+    goals.forEach((goal) => {
       planText += `  • ${goal}\n`;
     });
     planText += "\n";
