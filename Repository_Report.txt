@@ -1,0 +1,65 @@
+Repository Report (text) — mekaviraj/HackWithAI26
+As of: 2026-04-03
+
+Repository Overview
+Name: mekaviraj/HackWithAI26
+Repo ID: 1168214301
+Visibility: Public
+Default branch: main
+Primary language (GitHub): Python
+Created: ~34 days ago (relative to GitHub metadata)
+Last push: 2026-02-27T19:03:30Z
+Stars / Forks / Watchers: 0 / 0 / 0
+License: not set
+Description/Homepage/Topics: not set
+What the project is (based on README) Inside the repo there is an app called “Student Performance Analyzer MVP”, described as a web application to analyze student performance CSV data and produce:
+Statistical analysis + weakness detection
+Ranking of weak subjects/areas by severity
+Auto-generated 7‑day study plan
+Recommendations of free study material (Khan Academy, OpenStax, etc.)
+Tech stack stated:
+
+Backend: Flask, Pandas, NumPy
+Frontend: HTML/CSS/Vanilla JS + Chart.js
+API endpoints stated:
+
+POST /api/upload (upload CSV, returns analysis + plan + recommendations)
+GET /api/sample (demo/sample analysis)
+GET /api/health (health check)
+Language Composition (Computed from GitHub “languages” endpoint; bytes are approximate code-size weights)
+Python: 69,301 bytes (~67.8%)
+JavaScript: 16,490 bytes (~16.1%)
+CSS: 9,624 bytes (~9.4%)
+HTML: 7,949 bytes (~7.8%)
+High-level Structure / Notable Files Top-level items currently visible:
+.env (NOTE: this is typically sensitive; see “Risks” below)
+pycache/ (usually should not be committed)
+student-performance-analyzer/ (main project directory)
+README found at:
+
+student-performance-analyzer/README.md
+Project structure claimed in README:
+
+student-performance-analyzer/
+backend/
+app.py
+analyzer.py
+planner.py
+recommendations.py
+frontend/
+index.html
+dashboard.html
+static/
+styles.css
+app.js
+dashboard.js
+data/sample_data.csv
+requirements.txt
+README.md
+Issues & Pull Requests (current activity)
+Open issues: 0
+Open pull requests: 0
+Quick Risks / Cleanup Suggestions
+.env is committed at repo root: if it contains real secrets (API keys, passwords), rotate them immediately and remove .env from git history; add it to .gitignore.
+pycache/ is committed: usually should be removed and ignored (add pycache/ and *.pyc to .gitignore).
+If you want, I can
